@@ -1,0 +1,135 @@
+package northeasternScheduleCrawler;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Uploader {
+
+	private final String connString = "jdbc:derby:codejava/ClassData;create=true";
+	private final Connection conn;
+	private final Statement statement;
+	private String query;
+	
+	Uploader() throws SQLException {
+		this.conn = DriverManager.getConnection(connString);
+        if (this.conn == null) {
+        	throw new SQLException("Failed to connect to database");
+        }
+        this.statement = this.conn.createStatement();
+        this.query = "";
+	}
+	
+	public void disconnect() throws SQLException {
+		this.conn.close();
+	}
+	
+	public void createTable() throws SQLException {
+		this.query = "CREATE TABLE COURSE (" +
+			"crn INTEGER NOT NULL, " +
+			"credits FLOAT, " +
+			"endtime TIME, " +
+			"id VARCHAR(32), " +
+			"loctaion VARCHAR(32), " +
+			"name VARCHAR(32), " +
+			"professor VARCHAR(32), " +
+			"starttime TIME, " +
+			"term VARCHAR(32), " +
+			"monday BOOLEAN NOT NULL, " +
+			"tuesday BOOLEAN NOT NULL, " +
+			"wednesday BOOLEAN NOT NULL, " +
+			"thursday BOOLEAN NOT NULL, " +
+			"friday BOOLEAN NOT NULL, " +
+			"PRIMARY KEY(crn))";
+		this.statement.executeUpdate(query);
+		System.out.println("Successfully Created Table");
+	}
+	
+	public void deleteTable() throws SQLException {
+		this.query = "DROP TABLE COURSE";
+		statement.executeUpdate(query);
+		System.out.println("Successfully Deleted Tables");
+	}
+	
+	private Boolean getTimeBool(Course course, Day day) {
+		return course.days.contains(day);
+	}
+	
+	private java.sql.Time getSqlTime(LocalTime time) {
+		if (time == null) {
+			return null;
+		}
+		return java.sql.Time.valueOf(time);
+	}
+	
+	public void addCourse(Course course) throws SQLException {
+		this.query = "INSERT INTO " +
+						"COURSE " +
+						"VALUES ( " + 
+						"\'" + course.crn + "\' , \n" +
+						course.credits + ", \n" +
+						getSqlTime(course.endTime) + ", \n" +
+						"\'" + course.id + "\' , \n" +
+						"\'" + course.location + "\' , \n" +
+						"\'" + course.name + "\' , \n" +
+						"\'" + course.professor + "\' , \n" +
+						getSqlTime(course.startTime)  + ", \n" +
+						"\'" + course.term + "\' , \n" +
+						this.getTimeBool(course, Day.MONDAY) + ", \n" +
+						this.getTimeBool(course, Day.TUESDAY) + ", \n" +
+						this.getTimeBool(course, Day.WEDNESDAY) + ", \n" +
+						this.getTimeBool(course, Day.THURSDAY) + ", \n" +
+						this.getTimeBool(course, Day.FRIDAY) + ")";
+		//System.out.println(this.query);
+		statement.executeUpdate(query);
+		System.out.println("Successfully Added Course To Table");
+	}
+	
+	public void removeCourse(Course course) throws SQLException {
+		this.query = "DELETE FROM COURSE " +
+					"WHERE COURSE.crn = " + course.crn; 
+		statement.executeUpdate(query);
+		System.out.println("Successfully Deleted Course From Table");
+	}
+	
+	public List<Course> getData() throws SQLException {
+		this.query = "SELECT * FROM COURSE";
+		this.statement.executeQuery(this.query);
+        ResultSet resultSet = statement.getResultSet();
+        List<Course> courses = new ArrayList<>();
+        while (resultSet.next()) {
+        	Course course = new Course();
+        	course.crn = resultSet.getString("crn");
+        	course.credits = resultSet.getDouble("credits");
+        	course.endTime = LocalTime.of(resultSet.getTime("endtime").getHours(), resultSet.getTime("endtime").getMinutes());
+        	course.location = resultSet.getString("location");
+        	course.name = resultSet.getString("name");
+        	course.professor = resultSet.getString("professor");
+        	course.startTime = LocalTime.of(resultSet.getTime("starttime").getHours(), resultSet.getTime("starttime").getMinutes());
+        	course.term = resultSet.getString("term");
+        	if (resultSet.getBoolean("monday")) {
+        		course.days.add(Day.MONDAY);
+        	}
+        	if (resultSet.getBoolean("monday")) {
+        		course.days.add(Day.MONDAY);
+        	}
+        	if (resultSet.getBoolean("monday")) {
+        		course.days.add(Day.MONDAY);
+        	}
+        	if (resultSet.getBoolean("monday")) {
+        		course.days.add(Day.MONDAY);
+        	}
+        	if (resultSet.getBoolean("monday")) {
+        		course.days.add(Day.MONDAY);
+        	}
+        	if (resultSet.getBoolean("monday")) {
+        		course.days.add(Day.MONDAY);
+        	}
+        }
+		return courses;
+	}
+}

@@ -1,0 +1,161 @@
+package northeasternScheduleCrawler;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+
+public class Crawler {
+
+	private final WebDriver driver;
+	
+	Crawler() { 
+		this.driver = new FirefoxDriver();
+		this.driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+	}
+	
+	void login(String username, String password) {
+		this.driver.get("http://myneu.neu.edu/cp/home/displaylogin");
+		
+		WebElement usernameTextBox = this.driver.findElement(By.id("user"));
+		WebElement passwordTextBox = this.driver.findElement(By.id("pass"));
+		WebElement loginButton = this.driver.findElement(By.cssSelector("input[value=Login]"));
+		
+		usernameTextBox.sendKeys(username);
+		passwordTextBox.sendKeys(password);
+		loginButton.click();
+	}
+	
+	void goToSelfService() {
+		WebElement selfServiceTab = this.driver.findElement(By.linkText("Self-Service"));
+		selfServiceTab.click();
+	}
+	
+	void goToClassSchedule() {
+		WebElement classSchedule = this.driver.findElement(By.linkText("Schedule of Classes"));
+		classSchedule.click();
+		this.driver.switchTo().window("EntireSched");
+	}
+	
+	void selectTerm(String season, String year) {
+		WebElement searchByTermDropdown = this.driver.findElement(By.id("term_input_id"));
+		List<WebElement> options = searchByTermDropdown.findElements(By.tagName("option"));
+		for (WebElement option : options) {
+			if (option.getText().contains(season) && option.getText().contains(year)) {
+				option.click();
+				break;
+			}
+		}
+		WebElement submitButton = this.driver.findElement(By.cssSelector("input[value=Submit]"));
+		submitButton.click();
+	}
+	
+	Integer getNumberSubjects(String season, String year) {
+		this.goToClassSchedule();
+		this.selectTerm(season, year);
+		WebElement subjectMenu = this.driver.findElement(By.id("subjct_id"));
+		List<WebElement> subjects = subjectMenu.findElements(By.tagName("option"));
+		subjects.remove(0); //Remove "All" from list
+		this.driver.close();
+		this.driver.switchTo().window("");
+		return subjects.size();
+	}
+	
+	Course getCourse(WebElement header, WebElement body) {
+		Course course = new Course();
+		String[] headerInfo = header.getText().split(" - ");
+		course.name = headerInfo[0];
+		course.crn = headerInfo[1];
+		course.id = headerInfo[2];
+		//System.out.println(headerInfo[4].substring(8));
+		course.credits = Double.parseDouble(headerInfo[4].substring(8));
+		
+		String[] bodyText = body.getText().split("\n");
+		for (String bodyTextLine : bodyText) {
+			if (bodyTextLine.contains("Attributes")) {
+				course.attributes = new ArrayList<>(Arrays.asList(bodyTextLine.substring(12).split(", ")));
+			}
+			if (bodyTextLine.contains("Instructors: ")) {
+				course.professor = bodyTextLine.substring(13);
+			}
+			if (bodyTextLine.contains("Class")) {
+				String[] classVars = bodyTextLine.split(" ");
+				if (classVars.length > 8) {
+					try {
+						course.startTime = LocalTime.of(
+								Integer.parseInt(classVars[1].split(":")[0]), 
+								Integer.parseInt(classVars[1].split(":")[1]));
+						if (classVars[2] == "pm") {
+							course.startTime.plusHours(12);
+						}
+					} 
+					catch (NumberFormatException e) { }
+					try {
+						course.endTime = LocalTime.of(
+								Integer.parseInt(classVars[4].split(":")[0]), 
+								Integer.parseInt(classVars[4].split(":")[1]));
+						if (classVars[5] == "pm") {
+							course.endTime.plusHours(12);
+						}
+					} catch (NumberFormatException e) { }
+					
+					String days = classVars[6];
+					if (days.contains("M")) {
+						course.days.add(Day.MONDAY);
+					}
+					if (days.contains("T")) {
+						course.days.add(Day.TUESDAY);
+					}
+					if (days.contains("W")) {
+						course.days.add(Day.WEDNESDAY);
+					}
+					if (days.contains("R")) {
+						course.days.add(Day.THURSDAY);
+					}
+					if (days.contains("F")) {
+						course.days.add(Day.FRIDAY);
+					}
+					course.location = classVars[7];
+				}
+			}
+		}
+		return course;
+	}
+	
+	List<Course> getCoursesFromPage() {
+		List<Course> courses = new ArrayList<>();
+		List<WebElement> classRows = this.driver.findElements(By.cssSelector("div.pagebodydiv > table.datadisplaytable > tbody > tr"));
+		classRows.remove(classRows.size() - 1);
+		
+		/*for (WebElement classRow : classRows) {
+			System.out.println(classRow.getText() + '\n');
+		}*/
+		
+		for (Integer row = 0; row < classRows.size(); row += 2) {
+			courses.add(this.getCourse(classRows.get(row), classRows.get(row + 1)));
+		}
+		return courses;
+	}
+	
+	List<Course> getCourses(String season, String year, String subjectCode) {
+		List<Course> courses = new ArrayList<>();
+		this.goToClassSchedule();
+		this.selectTerm(season, year);
+		WebElement submitButton = this.driver.findElement(By.cssSelector("input[value=Submit]"));
+		WebElement subjectMenu = this.driver.findElement(By.id("subjct_id"));
+		WebElement all = subjectMenu.findElement(By.cssSelector("option:nth-child(1)"));
+		WebElement subject = subjectMenu.findElement(By.cssSelector("option[value=" + subjectCode + "]"));
+		all.click();
+		subject.click();
+		submitButton.click();
+		courses.addAll(this.getCoursesFromPage());
+		this.driver.close();
+		this.driver.switchTo().window("");
+		return courses;
+	}
+}

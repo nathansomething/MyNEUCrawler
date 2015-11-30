@@ -1,0 +1,76 @@
+package northeasternScheduleCrawler;
+
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class northeasternScheduleCrawler {
+
+	public static void main(String[] args) {
+		String username;
+		String password;
+		String season;
+		String year;
+		
+		if (args.length == 4) {
+			username = args[0];
+			password = args[1];
+			season = args[2];
+			year = args[3];
+		}
+		else {
+			throw new RuntimeException("Expects 4 arguments: Username, Password, Season, Year");
+		}
+		
+		/*Crawler crawler = new Crawler();
+		crawler.login(username, password);
+		crawler.goToSelfService();
+		List<Course> courses = crawler.getCourses(season, year, "ARAB");
+		crawler.close();*/
+		
+		// PRINT OUT ALL COURSES
+		/*for (Course course: courses) {
+			System.out.println(course.toString());
+		}*/
+		
+		Uploader uploader = null;
+		
+		
+		try {
+			uploader = new Uploader();
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+		/*try {
+			uploader.createTable();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}*/
+		/*try {
+			uploader.deleteTable();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}*/
+		/*for (Course course : courses) {
+			try {
+				uploader.addCourse(course);
+			}
+			catch(SQLIntegrityConstraintViolationException e) { }
+			catch (SQLException e) { 
+				e.printStackTrace();
+			}
+		}*/
+	
+		List<Course> coursesAfterUpload = new ArrayList<>();
+		try {
+			coursesAfterUpload = uploader.getData();
+			System.out.println("Number Courses Added: " + coursesAfterUpload.size());
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		for (Course course : coursesAfterUpload) {
+			System.out.println(course);
+		}
+	}
+}
