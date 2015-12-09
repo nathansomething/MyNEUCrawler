@@ -114,14 +114,14 @@ public class Crawler {
 	Course getCourse(WebElement header, WebElement body) {
 		Course course = new Course();
 		String[] headerInfo = header.getText().split(" - ");
-		course.name = headerInfo[0];
+		course.title = headerInfo[0];
 		course.crn = headerInfo[1];
-		course.id = headerInfo[2];
+		course.depHeader = headerInfo[2].split(" ")[0];
+		course.courseNum = headerInfo[2].split(" ")[1];
 		course.location = headerInfo[3].substring(headerInfo[3].indexOf("(") + 1, headerInfo[3].length() - 1);
-		//System.out.println(headerInfo[4].substring(8));
 		course.description = this.getDescription(header);
 		try {
-			course.credits = Double.parseDouble(headerInfo[4].substring(8));
+			course.credits = Integer.parseInt(headerInfo[4].substring(8));
 		}
 		catch (NumberFormatException e) { }
 		
@@ -129,12 +129,11 @@ public class Crawler {
 		String[] bodyText = body.getText().split("\n");
 		for (String bodyTextLine : bodyText) {
 			if (bodyTextLine.contains("Associated Term: ")) {
-				course.term = bodyTextLine.substring(16);
+				course.semester = bodyTextLine.substring(16);
 			}
 			if (bodyTextLine.contains("Attributes:")) {
 				//System.out.println(Boolean.valueOf(bodyTextLine.substring(12).contains("Honors")));
 				course.isHonors = Boolean.valueOf(bodyTextLine.substring(12).contains("Honors"));
-				
 			}
 			if (bodyTextLine.contains("Instructors: ")) {
 				course.professor = bodyTextLine.substring(13);
@@ -142,24 +141,8 @@ public class Crawler {
 			if (bodyTextLine.contains("Class")) {
 				String[] classVars = bodyTextLine.split(" ");
 				if (classVars.length > 8) {
-					try {
-						course.startTime = LocalTime.of(
-								Integer.parseInt(classVars[1].split(":")[0]), 
-								Integer.parseInt(classVars[1].split(":")[1]));
-						if (classVars[2] == "pm") {
-							course.startTime.plusHours(12);
-						}
-					}
-					catch (NumberFormatException e) { }
-					try {
-						course.endTime = LocalTime.of(
-								Integer.parseInt(classVars[4].split(":")[0]), 
-								Integer.parseInt(classVars[4].split(":")[1]));
-						if (classVars[5] == "pm") {
-							course.endTime.plusHours(12);
-						}
-					} 
-					catch (NumberFormatException e) { }
+					course.startTime = classVars[1] + " " + classVars[2];
+					course.endTime = classVars[4] + " " + classVars[5];
 					
 					String days = classVars[6];
 					if (days.contains("M")) {

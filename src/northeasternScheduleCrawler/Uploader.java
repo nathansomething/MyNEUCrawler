@@ -4,6 +4,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,27 +40,29 @@ public class Uploader {
 	}*/
 	
 	public void addCourse(Course course) throws SQLException {
-		this.query = "INSERT INTO " +
-						"COURSE " +
-						"VALUES ( " + 
-						"\'" + course.crn + "\' , \n" +
-						course.credits + ", \n" +
-						//getSqlTime(course.endTime) + ", \n" +
-						"\'" + course.id + "\' , \n" +
-						"\'" + course.location + "\' , \n" +
-						"\'" + course.name + "\' , \n" +
-						"\'" + course.professor + "\' , \n" +
-						//getSqlTime(course.startTime)  + ", \n" +
-						"\'" + course.term + "\' , \n" +
-						this.getTimeBool(course, Day.MONDAY) + ", \n" +
-						this.getTimeBool(course, Day.TUESDAY) + ", \n" +
-						this.getTimeBool(course, Day.WEDNESDAY) + ", \n" +
-						this.getTimeBool(course, Day.THURSDAY) + ", \n" +
-						this.getTimeBool(course, Day.FRIDAY) + ", \n" +
-						this.getTimeBool(course, Day.SATURDAY) + ")";
-		//System.out.println(this.query);
-		statement.executeUpdate(query);
-		System.out.println("Successfully Added Course To Table");
+			this.query = "INSERT INTO COURSE VALUES ( ";
+			this.query += "\'" + course.classroom + "\' , \n";
+			this.query += "\'" + course.courseNum + "\' , \n";
+			this.query += course.credits + ", \n";
+			this.query += "\'" + course.crn + "\' , \n";
+			this.query += "\'" + course.depHeader + "\' , \n";
+			this.query += "\'" + course.description + "\', \n";
+			this.query += "\'" + course.endTime + "\', \n";
+			this.query += course.isHonors + ", \n";
+			this.query += "\'" + course.location + "\' , \n";
+			this.query += "\'" + course.professor + "\' , \n";
+			this.query += "\'" + course.semester + "\' , \n";
+			this.query += "\'" + course.startTime + "\' , \n";
+			this.query += "\'" + course.title + "\' , \n";
+			this.query += this.getTimeBool(course, Day.MONDAY) + ", \n";
+			this.query += this.getTimeBool(course, Day.TUESDAY) + ", \n";
+			this.query += this.getTimeBool(course, Day.WEDNESDAY) + ", \n";
+			this.query += this.getTimeBool(course, Day.THURSDAY) + ", \n";
+			this.query += this.getTimeBool(course, Day.FRIDAY) + ", \n";
+			this.query += this.getTimeBool(course, Day.SATURDAY) + ")";
+			//System.out.println(this.query);
+			statement.executeUpdate(query);
+			System.out.println("Successfully Added Course To Table");
 	}
 	
 	public void removeCourse(Course course) throws SQLException {
@@ -83,15 +86,19 @@ public class Uploader {
         List<Course> courses = new ArrayList<>();
         while (resultSet.next()) {
         	Course course = new Course();
-        	course.crn = resultSet.getString("crn");
-        	course.credits = resultSet.getDouble("credits");
-        	//course.endTime = LocalTime.of(resultSet.getTime("endtime").getHours(), resultSet.getTime("endtime").getMinutes());
-        	course.id = resultSet.getString("id");
-        	course.location = resultSet.getString("location");
-        	course.name = resultSet.getString("name");
-        	course.professor = resultSet.getString("professor");
-        	//course.startTime = LocalTime.of(resultSet.getTime("starttime").getHours(), resultSet.getTime("starttime").getMinutes());
-        	course.term = resultSet.getString("term");
+        	course.classroom = resultSet.getString("classroom");
+			course.courseNum = resultSet.getString("courseNum");
+			course.credits = resultSet.getInt("credits");
+			course.crn = resultSet.getString("crn");
+			course.depHeader = resultSet.getString("depHeader");
+			course.description = resultSet.getString("description");
+			course.endTime = resultSet.getString("endtime");
+			course.isHonors = resultSet.getBoolean("isHonors");
+			course.location = resultSet.getString("location");
+			course.professor = resultSet.getString("professor");
+			course.semester = resultSet.getString("semester");
+			course.startTime = resultSet.getString("starttime");
+			course.title = resultSet.getString("title");
         	if (resultSet.getBoolean("monday")) {
         		course.days.add(Day.MONDAY);
         	}

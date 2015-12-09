@@ -16,6 +16,5 @@ public class RemoveTable {
 		String query = "DROP TABLE COURSE";
 		statement.executeUpdate(query);
 		System.out.println("Successfully Deleted Table");
-
 	}
 }

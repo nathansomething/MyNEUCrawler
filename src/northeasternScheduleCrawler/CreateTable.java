@@ -14,19 +14,19 @@ public class CreateTable {
 		Connection conn =  DriverManager.getConnection(connString);
         Statement statement = conn.createStatement();
 		String query = "CREATE TABLE COURSE (" +
+			"classroom VARCHAR(32), " +
+			"courseNum VARCHAR(6), " +
+			"credits INTEGER, " +
 			"crn VARCHAR(32) NOT NULL, " +
-			"credits FLOAT, " +
-			"endtimeHour INTEGER, " +
-			"endtimeMinute INTEGER, " +
-			"endtimeIsAM BOOLEAN, " +
-			"id VARCHAR(32), " +
+			"depHeader VARCHAR(32), " +
+			"description VARCHAR(1024), " +
+			"endtime VARCHAR(32), " +
+			"isHonors BOOLEAN, " +
 			"location VARCHAR(32), " +
-			"name VARCHAR(256), " +
-			"professor VARCHAR(32), " +
-			"starttimeHour INTEGER, " +
-			"starttimeMinute INTEGER, " +
-			"starttimeIsAM BOOLEAN, " +
-			"term VARCHAR(32), " +
+			"professor VARCHAR(64), " +
+			"semester VARCHAR(32), " +
+			"starttime VARCHAR(32), " +
+			"title VARCHAR(64), " +
 			"monday BOOLEAN NOT NULL, " +
 			"tuesday BOOLEAN NOT NULL, " +
 			"wednesday BOOLEAN NOT NULL, " +
@@ -36,6 +36,5 @@ public class CreateTable {
 			"PRIMARY KEY(crn))";
 		statement.executeUpdate(query);
 		System.out.println("Successfully Created Table");
-
 	}
 }
